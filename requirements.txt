@@ -1,0 +1,4 @@
+sqlalchemy
+wheel
+# mysqlclient # apt-get install pkg-config build-essential libmysqlclient-dev
+psycopg2-binary
