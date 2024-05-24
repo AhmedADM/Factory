@@ -1,5 +1,5 @@
 
-
+from configparser import ConfigParser
 from flask import Blueprint, Flask, url_for
 from flask_restx import Api
 
@@ -14,16 +14,24 @@ app = Flask(__name__)
 factory_home_bp = Blueprint("home", __name__, url_prefix="/home")
 
 
+parser = ConfigParser()
+parser.read("./app.conf")
+db_configs = parser["Database"]
 
-db_name = "factory_db"
-db_port = "3300"
-username = "ahmhunt"
-password = "gd12345"
+config = {}
+config["DB_NAME"] = db_configs.get("db", "")
+config["DB_PORT"] = int(db_configs.get("db_port", 0))
+config["DB_USERNAME"] = db_configs.get("username", "")
+config["DB_PASSWORD"] = db_configs.get("password", "")
 
-connection_str = f"postgresql+psycopg2://{username}:{password}@127.0.0.1:{db_port}/{db_name}"
+print(config)
+
+
+connection_str = f"postgresql+psycopg2://{config['DB_USERNAME']}:{config['DB_PASSWORD']}@127.0.0.1:{config['DB_PORT']}/{config['DB_NAME']}"
 
 factory_db = FactoryDB(connection_str)
 app.db = factory_db
+
 
 
 
@@ -54,9 +62,6 @@ api.add_resource(MultipleSizes, "/product/<int:product_id>/sizes", strict_slashe
 
 api.add_resource(SingleItem, "/items/<int:item_id>", strict_slashes=False)
 api.add_resource(MultipleItems, "/items", strict_slashes=False)
-
-
-
 
 
 
