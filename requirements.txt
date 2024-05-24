@@ -1,4 +1,12 @@
-sqlalchemy
-wheel
-# mysqlclient # apt-get install pkg-config build-essential libmysqlclient-dev
+# to uninstall dependencies that are not available in requirements.txt
+# pip freeze | grep -v -f requirements.txt | awk -F '@' '{print$1}' | xargs pip uninstall -y
+
+Flask
+flask_cors
+flask_httpauth
+flask-restx
+flask_sqlalchemy
+markupsafe==2.0.1
 psycopg2-binary
+sqlalchemy
+Werkzeug
