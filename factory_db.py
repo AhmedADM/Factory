@@ -116,13 +116,107 @@ class FactoryDB():
                 return product_dict
             return {}
 
+    def add_product(self, data):
+        with Session(self.engin) as session:
+            new_product = Product(**data)
+            session.add(new_product)
+            session.commit()
+            session.refresh(new_product)
+            return self.dictdump(new_product)
+
+
+    def update_product(self, product_id, **data):
+        with Session(self.engin) as session:
+            product = session.query(Product).filter_by(id=product_id).first()
+            if not product:
+                return None
+            for attr in data:
+                if hasattr(product, attr):
+                    setattr(product, attr, data[attr])
+
+            session.add(product)
+            session.commit()
+            return product
+
+    def delete_product(self, product_id):
+        with Session(self.engin) as session:
+            product = session.query(Product).filter_by(id=product_id).first()
+            if not product:
+                return None
+            elif product.sizes:
+                raise Exception("Unable to delete product that has multiple sizes")
+            session.delete(product)
+            session.commit()
+
+            return product_id
+
+
+    def get_size(self, size_id = 0):
+        with Session(self.engin) as session:
+            size =  session.query(Size).filter_by(id = size_id).first()
+            if size:
+                size_dict = self.dictdump(size)
+                return size_dict
+
+            return {}
+
+    def update_size(self, size_id, **data):
+        with Session(self.engin) as session:
+            size = session.query(Size).filter_by(id = size_id).first()
+            if not size:
+                return None
+
+            for attr in data:
+                if hasattr(size, attr):
+                    setattr(size, attr, data[attr])
+
+            session.add(size)
+            session.commit()
+            return size
+
+
+    def delete_size(self, size_id):
+        with Session(self.engin) as session:
+            size = session.query(Size).filter_by(id=size_id).first()
+            if not size:
+                return None
+            session.delete(size)
+            session.commit()
+
+            return size_id
+
     def get_product_sizes(self, product_id = 0):
         with Session(self.engin) as session:
             sizes = session.query(Size).filter_by(product_id = product_id).all()
             if sizes:
-                size_dict = self.dictdump(sizes)
-                return size_dict
+                sizes_dict = self.dictdump(sizes)
+                return sizes_dict
             return []
+
+    def add_size(self, product_id, data):
+        data["product_id"] = product_id
+        with Session(self.engin) as session:
+            new_size = Size(**data)
+            session.add(new_size)
+            session.commit()
+            session.refresh(new_size)
+            return self.dictdump(new_size)
+
+
+    def add_sizes(self, sizes):
+        with Session(self.engin) as session:
+            session.add_all(sizes)
+            session.commit()
+
+            return len(sizes)
+
+
+    def add_items(self, items):
+        with Session(self.engin) as session:
+            session.add_all(items)
+            session.commit()
+
+            return len(items)
 
 
     def get_product_items(self, product_id=0):
@@ -136,9 +230,73 @@ class FactoryDB():
                     print(size_items_dict)
                     items += size_items_dict
 
-                return  items
+                return  list(sorted(items, lambda i: i['expire_date'], reverse=True))
 
             return []
+
+
+    def get_all_items(self):
+        with Session(self.engin) as session:
+            items = session.query(Item,Size,Product).join(Size, Item.size_id == Size.id).join(Product, Size.product_id == Product.id).all()
+            if items:
+                new_items = []
+                for item in items:
+                    new_item = self.dictdump(item[0])
+                    new_item.pop('size_id')
+                    size = item[1]
+                    new_item['size'] = size.size
+                    new_item['sku'] = size.sku
+
+                    product = item[2]
+                    new_item['product'] = product.name
+                    new_item['product_description'] = product.description
+
+                    new_items.append(new_item)
+                return new_items
+            return []
+
+
+    def get_single_item(self, item_id = 0):
+        with Session(self.engin) as session:
+            item = session.query(Item).filter_by(id = item_id).order_by(Item.expire_date.desc()).first()
+            if item:
+                return self.dictdump(item)
+            return {}
+
+
+    def add_single_item(self, **data):
+        with Session(self.engin) as session:
+            item = Item(**data)
+            session.add(item)
+            session.commit()
+            session.refresh(item)
+
+            return item
+
+
+    def update_item(self, item_id, **data):
+        with Session(self.engin) as session:
+            item = session.query(Item).filter_by(id = item_id).first()
+            if not item:
+                return None
+
+            for attr in data:
+                if hasattr(item, attr):
+                    setattr(item, attr, data[attr])
+
+            session.add(item)
+            session.commit()
+            return item
+
+    def delete_item(self, item_id):
+        with Session(self.engin) as session:
+            item = session.query(Item).filter_by(id=item_id).first()
+            if not item:
+                return None
+            session.delete(item)
+            session.commit()
+
+            return item_id
 
 
 
