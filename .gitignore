@@ -1,2 +1,5 @@
 .idea
 __pycache__
+docker/nginx_volumes
+docker/postgresql_volumes
+.DS_Store

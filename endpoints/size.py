@@ -3,7 +3,9 @@ from flask import  current_app,  jsonify, request
 from flask_restx import Resource
 
 from factory_auth import auth
+from factory_config import api
 from factory_db import Size
+from factory_doc import size_id_param, size_update_params, product_id_param, swagger_product_add_sizes_data
 
 
 class UnableToFindSize(Exception):
@@ -21,6 +23,7 @@ class UnableToDeleteSize(Exception):
 
 
 class SingleSize(Resource):
+    @api.doc( params=size_id_param  )
     def get(self, size_id):
         """
         Get Size details
@@ -40,6 +43,7 @@ class SingleSize(Resource):
 
             return resp
 
+    @api.doc( params=size_update_params )
     @auth.login_required
     def put(self, size_id):
         """
@@ -68,6 +72,7 @@ class SingleSize(Resource):
 
             return resp
 
+    @api.doc( params=size_id_param  )
     @auth.login_required
     def delete(self, size_id):
         """
@@ -90,6 +95,7 @@ class SingleSize(Resource):
 
 
 class MultipleSizes(Resource):
+    @api.doc(params = product_id_param)
     def get(self, product_id):
         """
         Get sizes of product ID
@@ -108,6 +114,7 @@ class MultipleSizes(Resource):
                  "return_code" : 1
             }, 404
 
+    @api.doc(params = swagger_product_add_sizes_data)
     @auth.login_required
     def put(self, product_id):
         """

@@ -1,10 +1,12 @@
 import json
 
 from factory_auth import auth
+from factory_config import api
 from factory_db import Item
 from flask import  current_app,  jsonify, request
 from flask_restx import Resource
 
+from factory_doc import item_id_param, swagger_item_update_data, swagger_add_items_data
 
 
 class UnableToFindItem(Exception):
@@ -21,7 +23,13 @@ class UnableToDeleteItem(Exception):
 
 
 class SingleItem(Resource):
+    @api.doc( params=item_id_param  )
     def get(self, item_id):
+        """
+        Get item details
+        :param item_id:
+        :return:
+        """
         try:
             item = current_app.db.get_single_item(item_id)
             if not item:
@@ -36,8 +44,14 @@ class SingleItem(Resource):
 
             return resp
 
+    @api.doc( params=swagger_item_update_data  )
     @auth.login_required
     def put(self, item_id):
+        """
+        Update Item
+        :param item_id:
+        :return:
+        """
         try:
             if not request.data:
                 resp = jsonify(message="Item data needed", return_code = 1)
@@ -59,6 +73,7 @@ class SingleItem(Resource):
 
             return resp
 
+    @api.doc( params=item_id_param  )
     @auth.login_required
     def delete(self, item_id):
         """
@@ -102,6 +117,8 @@ class MultipleItems(Resource):
 
             return resp
 
+
+    @api.doc(params = swagger_add_items_data)
     @auth.login_required
     def post(self):
         """

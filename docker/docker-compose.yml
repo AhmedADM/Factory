@@ -1,0 +1,65 @@
+version: '3.1'
+
+services:
+  db:
+    image: postgres
+    container_name: factory_db
+    restart: always
+    ports:
+      - "3300:5432"
+    tty: true
+    stdin_open: true
+    environment:
+      POSTGRES_PASSWORD: gd12345
+      POSTGRES_USER: ahmhunt
+      POSTGRES_DB: factory_db
+
+    volumes:
+      - ./postgresql_volumes:/var/lib/postgresql/data
+
+    networks:
+      - default
+
+  factory-api:
+      image: factory-api
+      container_name: factory_api
+      ports:
+        - 8000:6000
+      tty: true
+      stdin_open: true
+
+      depends_on:   
+        - db 
+
+      networks:
+        - default
+
+  nginx:
+    image: nginx
+    container_name: factory_inx
+
+    volumes:
+      - ./nginx_volumes/templates:/usr/share/nginx/html:ro
+      - ./nginx_volumes/nginx_conf:/etc/nginx
+
+    ports:
+      - 9002:70
+      - 9000:80
+      - 9001:90
+
+    networks:
+        - default
+
+    depends_on:   
+        - factory-api 
+
+
+
+
+# volumes:
+#   mysql_volumes:
+#     driver: local
+#     driver_opts:
+#       type: 'none'
+#       o: 'bind'
+#       device: '/Users/ahmedhunt/ME/Projects/2024/Factory/Docker/sql_volumes'

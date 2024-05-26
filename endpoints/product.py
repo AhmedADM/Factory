@@ -3,6 +3,8 @@ from flask import  current_app,  jsonify, request
 from flask_restx import Resource
 
 from factory_auth import auth
+from factory_config import api
+from factory_doc import product_id_param, swagger_product_update_data, swagger_product_add_data
 
 
 class UnableToFindProduct(Exception):
@@ -18,8 +20,11 @@ class UnableToUpdateProduct(Exception):
 class UnableToDeleteProduct(Exception):
     pass
 
-# Product CRUD
-class Product(Resource):
+
+
+
+class SingleProudct(Resource):
+    @api.doc( params= product_id_param  )
     def get(self, product_id):
         """
         Get Product details
@@ -30,40 +35,15 @@ class Product(Resource):
             product = current_app.db.get_product(product_id)
             if not product:
                 raise UnableToFindProduct(f"Product with id {product_id} does not exists.")
-            return jsonify(result=product, return_code = 0)
+            return jsonify(result=product, return_code=0)
         except UnableToFindProduct as ex:
             msg = str(ex)
             return {
                 "message": msg,
-                 "return_code" : 1
+                "return_code": 1
             }, 404
 
-    @auth.login_required
-    def post(self):
-        """
-        Add single product
-        :return:
-        """
-        try:
-
-            if not request.data:
-                return {
-                    "message": "Product data needed",
-                    "return_code": 1
-                }, 400
-
-            data = json.loads(request.data)
-            new_product = current_app.db.add_product(data)
-            if not new_product:
-                raise UnableToAddProduct("Failed to add new product")
-            return jsonify(message=f"Product with id {new_product.get('id')} is Added!!")
-        except UnableToAddProduct as ex:
-            msg = str(ex)
-            return {
-                "message": msg,
-                "return_code": 1
-            }, 500
-
+    @api.doc( params=swagger_product_update_data )
     @auth.login_required
     def put(self, product_id):
         """
@@ -93,6 +73,7 @@ class Product(Resource):
                 "return_code": 1
             }, 500
 
+    @api.doc(params=product_id_param)
     @auth.login_required
     def delete(self, product_id):
         """
@@ -105,7 +86,7 @@ class Product(Resource):
             if not deleted_product_id:
                 raise UnableToDeleteProduct(f"Unable to delete product with id {product_id}")
 
-            return jsonify(message = f"Product with id {product_id} is successfully deleted")
+            return jsonify(message=f"Product with id {product_id} is successfully deleted")
 
         except UnableToDeleteProduct as ex:
             msg = str(ex)
@@ -119,3 +100,35 @@ class Product(Resource):
                 "message": msg,
                 "return_code": 1
             }, 500
+
+
+# Product CRUD
+class NewProduct(Resource):
+
+    @api.doc( params = (swagger_product_add_data) )
+    @auth.login_required
+    def post(self):
+        """
+        Add single product
+        :return:
+        """
+        try:
+
+            if not request.data:
+                return {
+                    "message": "Product data needed",
+                    "return_code": 1
+                }, 400
+
+            data = json.loads(request.data)
+            new_product = current_app.db.add_product(data)
+            if not new_product:
+                raise UnableToAddProduct("Failed to add new product")
+            return jsonify(message=f"Product with id {new_product.get('id')} is Added!!")
+        except UnableToAddProduct as ex:
+            msg = str(ex)
+            return {
+                "message": msg,
+                "return_code": 1
+            }, 500
+
